@@ -1,6 +1,6 @@
 from PlikPng import *
 
-sciezka = "images/gull.png"
+sciezka = "images/cat.png"
 
 png = PlikPng(sciezka)
 print("\n<==========================================>\nWszystkie chunki:")

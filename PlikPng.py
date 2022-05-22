@@ -38,9 +38,9 @@ class PlikPng:
         img2 = mpimg.imread(file_path)
 
         plt.subplot(121), plt.imshow(img)
-        plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+        plt.title('Obrazek oryginalny'), plt.xticks([]), plt.yticks([])
         plt.subplot(122), plt.imshow(img2)
-        plt.title('Cleaned Image'), plt.xticks([]), plt.yticks([])
+        plt.title('Obrazek oczyszczony'), plt.xticks([]), plt.yticks([])
         plt.show()
 
     # Przeprowadza fazowa i amplitudowa transformatę fouriera na obrazie i wyswietla je side-by-side
@@ -51,12 +51,15 @@ class PlikPng:
         magnitude_spectrum = 20 * np.log(np.abs(fshift))
         phase_spectrum = np.asarray(np.angle(fshift))
 
-        plt.subplot(131), plt.imshow(img, cmap='gray')
-        plt.title('Input Image'), plt.xticks([]), plt.yticks([])
-        plt.subplot(132), plt.imshow(magnitude_spectrum, cmap='gray')
-        plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
-        plt.subplot(133), plt.imshow(phase_spectrum, cmap='gray')
-        plt.title('Phase Spectrum'), plt.xticks([]), plt.yticks([])
+        plt.subplot(141), plt.imshow(img, cmap='gray')
+        plt.title('Obrazek oryginalny'), plt.xticks([]), plt.yticks([])
+        plt.subplot(142), plt.imshow(magnitude_spectrum, cmap='gray')
+        plt.title('Widmo amplitudowe'), plt.xticks([]), plt.yticks([])
+        plt.subplot(143), plt.imshow(phase_spectrum, cmap='gray')
+        plt.title('Widmo fazowe'), plt.xticks([]), plt.yticks([])
+        inverted_f = np.fft.ifft2(f)
+        plt.subplot(144), plt.imshow(np.abs(inverted_f), cmap='gray')
+        plt.title('Odwrotna transformata fouriera'), plt.xticks([]), plt.yticks([])
         plt.show()
 
     # Wypisz tablice chunkow
