@@ -8,34 +8,34 @@ PNG_MAGIC_NUMBER = b'\x89PNG\r\n\x1a\n'
 
 class PlikPng:
     # Konstruktor
-    def __init__(self, path): 
+    def __init__(self, sciezka): 
         try:
-            self.file = open(path, 'rb')
+            self.plik = open(sciezka, 'rb')
         except IOError as e:
             raise e
 
-        if self.file.read(len(PNG_MAGIC_NUMBER)) != PNG_MAGIC_NUMBER:
+        if self.plik.read(len(PNG_MAGIC_NUMBER)) != PNG_MAGIC_NUMBER:
             raise Exception('To nie plik PNG!')
 
-        self.path = path    
-        self.chunks = []
+        self.sciezka = sciezka    
+        self.tablica_chunkow = []
 
     # Wyswietla pojedynczy obraz
     def wyswietl_obraz(self):            
-        tmp_png = self.file
+        tmp_png = self.plik
         tmp_png.seek(0)
         img = mpimg.imread(tmp_png)
         plt.imshow(img)
         plt.show()
-        tmp_png.seek(len(PNG_MAGIC_NUMBER))
+        tmp_png.seek(len(PNG_MAGIC_NUMBER))     # Omijamy magic nuber
 
     # Wyswietla obraz oryginalny i obraz tylko z niezbędnymi chunkami side-by-side
-    def wyswietl_orginal_z_oczyszczonym(self, file_name):
-        img = mpimg.imread(self.path)
+    def wyswietl_orginal_z_oczyszczonym(self, plik):
+        img = mpimg.imread(self.sciezka)
 
-        file_path = 'images/' + file_name + '.png'
-        self.stworz_plik_z_niezbednymi_chunkami(file_path)
-        img2 = mpimg.imread(file_path)
+        sciezka = 'images/' + plik + '.png'
+        self.stworz_plik_z_niezbednymi_chunkami(sciezka)
+        img2 = mpimg.imread(sciezka)
 
         plt.subplot(121), plt.imshow(img)
         plt.title('Obrazek oryginalny'), plt.xticks([]), plt.yticks([])
@@ -45,76 +45,82 @@ class PlikPng:
 
     # Przeprowadza fazowa i amplitudowa transformatę fouriera na obrazie i wyswietla je side-by-side
     def wyswietl_transformate_fouriera(self):
-        img = cv2.imread(self.path, 0)
-        f = np.fft.fft2(img)
-        fshift = np.fft.fftshift(f)
-        magnitude_spectrum = 20 * np.log(np.abs(fshift))
-        phase_spectrum = np.asarray(np.angle(fshift))
+        img = cv2.imread(self.sciezka, 0)
+        f = np.fft.fft2(img)            # Fourier dyskretny dwuwymiarowy
+        fshift = np.fft.fftshift(f)     # Shift skladowej stalej na srodek
+
+        widmo_amplitudowe = 20 * np.log(np.abs(fshift))     
+        widmo_fazowe = np.asarray(np.angle(fshift))
 
         plt.subplot(141), plt.imshow(img, cmap='gray')
         plt.title('Obrazek oryginalny'), plt.xticks([]), plt.yticks([])
-        plt.subplot(142), plt.imshow(magnitude_spectrum, cmap='gray')
+        plt.subplot(142), plt.imshow(widmo_amplitudowe, cmap='gray')
         plt.title('Widmo amplitudowe'), plt.xticks([]), plt.yticks([])
-        plt.subplot(143), plt.imshow(phase_spectrum, cmap='gray')
+        plt.subplot(143), plt.imshow(widmo_fazowe, cmap='gray')
         plt.title('Widmo fazowe'), plt.xticks([]), plt.yticks([])
-        inverted_f = np.fft.ifft2(f)
-        plt.subplot(144), plt.imshow(np.abs(inverted_f), cmap='gray')
+
+        transformata_odwrotna = np.fft.ifft2(f)
+        plt.subplot(144), plt.imshow(np.abs(transformata_odwrotna), cmap='gray')
         plt.title('Odwrotna transformata fouriera'), plt.xticks([]), plt.yticks([])
         plt.show()
 
     # Wypisz tablice chunkow
     def wypisz_chunki(self):
         print("----------------------")
-        for chunk in self.chunks:
+        for chunk in self.tablica_chunkow:
             chunk.__str__()
             print("----------------------")
 
     # Wyczysc tablice chunkow
     def wyczysc_tablice_chunkow(self):
-        self.file.seek(len(PNG_MAGIC_NUMBER))
-        self.chunks.clear()
+        self.plik.seek(len(PNG_MAGIC_NUMBER))
+        self.tablica_chunkow.clear()
 
     # Wczytaj wszystkie chunki do tablicy 
     def wczytaj_wszystkie_chunki(self):
-        self.chunks = []
+        self.tablica_chunkow = []
         while True:
-            dlugosc = self.file.read(Chunk.DLUGOSC)
-            typ = self.file.read(Chunk.DLUGOSC)
-            dane = self.file.read(int.from_bytes(dlugosc, 'big'))
-            crc = self.file.read(Chunk.DLUGOSC)
+            dlugosc = self.plik.read(Chunk.DLUGOSC)
+            typ = self.plik.read(Chunk.DLUGOSC)
+            dane = self.plik.read(int.from_bytes(dlugosc, 'big'))
+            crc = self.plik.read(Chunk.DLUGOSC)
+
             specific_chunk = RODZAJE_CHUNKOW.get(typ, Chunk)
             chunk = specific_chunk(dlugosc, dane, typ, crc)
-            self.chunks.append(chunk)
+            self.tablica_chunkow.append(chunk)
+
             if typ == b'IEND':
-                self.file.seek(len(PNG_MAGIC_NUMBER))
+                self.plik.seek(len(PNG_MAGIC_NUMBER))
                 break
 
     # Wczytaj tylko niezbedne chunki do tablicy
     def wczytaj_niezbedne_chunki(self):
-        self.chunks = []
+        self.tablica_chunkow = []
         while True:
-            dlugosc = self.file.read(Chunk.DLUGOSC)
-            typ = self.file.read(Chunk.DLUGOSC)
-            dane = self.file.read(int.from_bytes(dlugosc, 'big'))
-            crc = self.file.read(Chunk.DLUGOSC)
+            dlugosc = self.plik.read(Chunk.DLUGOSC)
+            typ = self.plik.read(Chunk.DLUGOSC)
+            dane = self.plik.read(int.from_bytes(dlugosc, 'big'))
+            crc = self.plik.read(Chunk.DLUGOSC)
+
             if typ in NIEZBEDNE_CHUNKI:
                 specific_chunk = RODZAJE_CHUNKOW.get(typ, Chunk)
                 chunk = specific_chunk(dlugosc, dane, typ, crc)
-                self.chunks.append(chunk)
+                self.tablica_chunkow.append(chunk)
+
             if typ == b'IEND':
-                self.file.seek(len(PNG_MAGIC_NUMBER))
+                self.plik.seek(len(PNG_MAGIC_NUMBER))
                 break
 
     # Stworz plik z niezbednymi chunkami
-    def stworz_plik_z_niezbednymi_chunkami(self, file_path):
-        new_file = open(file_path, 'wb')
-        new_file.write(PNG_MAGIC_NUMBER)
+    def stworz_plik_z_niezbednymi_chunkami(self, sciezka):
+        plik = open(sciezka, 'wb')
+        plik.write(PNG_MAGIC_NUMBER)
 
-        for chunk in self.chunks:
+        for chunk in self.tablica_chunkow:
             if chunk.typ in NIEZBEDNE_CHUNKI:
-                new_file.write(chunk.dlugosc)
-                new_file.write(chunk.typ)
-                new_file.write(chunk.dane)
-                new_file.write(chunk.crc)
+                plik.write(chunk.dlugosc)
+                plik.write(chunk.typ)
+                plik.write(chunk.dane)
+                plik.write(chunk.crc)
 
-        new_file.close()
+        plik.close()

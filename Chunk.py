@@ -5,7 +5,6 @@ import struct
 class Chunk:
     DLUGOSC = 4
 
-
     def __init__(self, dlugosc, dane, typ, crc):
         self.dlugosc = dlugosc
         self.dane = dane
@@ -15,9 +14,7 @@ class Chunk:
     def __str__(self):
         print(" > Nazwa chunka: " + codecs.decode(self.typ, 'UTF-8'))
         print("     - Lenght: " + str(int.from_bytes(self.dlugosc, 'big')))
-        # print("    dane: " + str(self.dane))
         print("     - CRC: " + self.crc.hex())
-
 
 class IHDR(Chunk):
     def __init__(self, dlugosc, typ, dane, crc):
@@ -41,16 +38,13 @@ class IHDR(Chunk):
         print("     - Filter_method: " + self.filter_method)
         print("     - Interlace_method: " + self.interlace_method)
 
-
 class IDAT(Chunk):
     def __init__(self, dlugosc, typ, dane, crc):
         super().__init__(dlugosc, typ, dane, crc)
 
-
 class IEND(Chunk):
     def __init__(self, dlugosc, typ, dane, crc):
         super().__init__(dlugosc, typ, dane, crc)
-
 
 class gAMA(Chunk):
     def __init__(self, dlugosc, typ, dane, crc):
@@ -60,7 +54,6 @@ class gAMA(Chunk):
         gamma = int.from_bytes(self.dane, 'big') / 100000
         print(" > Nazwa chunka: " + codecs.decode(self.typ, 'UTF-8'))
         print("     - Gamma number:" + str(gamma))
-
 
 class cHRM(Chunk):
     def __init__(self, dlugosc, typ, dane, crc):
@@ -85,7 +78,6 @@ class cHRM(Chunk):
         print("     - GreenY: " + str(Gy))
         print("     - BlueX: " + str(Bx))
         print("     - BlueY: " + str(By))
-
 
 class tIME(Chunk):
     def __init__(self, dlugosc, typ, dane, crc):
@@ -122,8 +114,6 @@ class sRGB(Chunk):
         print("     - Color space: " + str(color))
         print("     - Type: " + colors_dic.get(color))
 
-
-
 class pHYs(Chunk):
     def __init__(self, dlugosc, typ, dane, crc):
         super().__init__(dlugosc, typ, dane, crc)
@@ -137,7 +127,9 @@ class pHYs(Chunk):
         print("     - Pixel per: " + str(jedn) + ", X axis: " + str(pixele_X))
         print("     - Pixel per: " + str(jedn) + ", Y axis: " + str(pixele_Y))
 
-# Does not work
+def colored (r, g, b, text): 
+    return "\033[38;2;{};{};{}m{} \033[38;2;255;255;255m".format(r, g, b, text)
+
 class PLTE(Chunk):
     palette = []
     def __init__(self, dlugosc, typ, dane, crc):
@@ -156,22 +148,17 @@ class PLTE(Chunk):
         for color in self.palette:
             print('[', color[0], ';', color[1], ';', color[2], ']', '->', colored(color[0], color[1], color[2], (str)("KOLOR")))
 
-
-def colored(r, g, b, text): # Koloruje 
-    return "\033[38;2;{};{};{}m{} \033[38;2;255;255;255m".format(r, g, b, text)
-
-
 NIEZBEDNE_CHUNKI = [b'IHDR', b'IDAT', b'IEND', b'PLTE']
 
 RODZAJE_CHUNKOW = {
-    b'IHDR': IHDR,####################################################################################
-    b'PLTE': PLTE,####################################################################################
-    b'IDAT': IDAT,####################################################################################
-    b'IEND': IEND,####################################################################################
+    b'IHDR': IHDR,
+    b'PLTE': PLTE,
+    b'IDAT': IDAT,
+    b'IEND': IEND,
     b'tIME': tIME,
-    b'sRGB': sRGB,####################################################################################
+    b'sRGB': sRGB,
     b'gAMA': gAMA,
-    b'pHYs': pHYs,####################################################################################
+    b'pHYs': pHYs,
     b'cHRM': cHRM
 }
 
